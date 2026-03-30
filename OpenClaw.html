@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenClaw 在量子计算实验中的应用与风险评估</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Chosen Palette: Quantum Slate & Alert Colors (Slate-900 background accents, Slate-50 base, Red-600 for critical risks, Blue-500 for tech) -->
+    <!-- Application Structure Plan: 
+         1. Hero / Executive Summary: Sets the context of OpenClaw in quantum labs.
+         2. Interactive Applications Dashboard: A split layout where users click a specific use case (e.g., Calibration) to see a detailed description and an efficiency comparison chart. This groups functional data logically.
+         3. Risk Analysis Matrix: A critical section featuring a Bubble Chart mapping likelihood vs. impact. Explanatory text blocks accompany the chart to detail the catastrophic risks.
+         4. Mitigation Architecture: A CSS-only structural diagram outlining the Zero-Trust deployment model, ensuring safe interaction without relying on external images.
+         This structure logically flows from "What can it do?" to "What are the dangers?" to "How do we protect ourselves?", maximizing user understanding.
+    -->
+    <!-- Visualization & Content Choices: 
+         - Bar Chart (Applications): Goal -> Compare manual vs. AI efficiency. Method -> Chart.js Bar Chart. Justification -> Clear, direct comparison of time saved. NO SVG/Mermaid.
+         - Bubble Chart (Risks): Goal -> Map relationship between Likelihood, Impact, and Severity. Method -> Chart.js Bubble Chart. Justification -> Standard risk matrix visualization. NO SVG/Mermaid.
+         - CSS Flowchart (Mitigation): Goal -> Organize security layers. Method -> HTML/Tailwind CSS blocks and borders. Justification -> Visualizes process flow while strictly adhering to the NO SVG constraint.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <style>
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #f8fafc;
+            color: #0f172a;
+        }
+
+        /* STRICT Chart Container Requirements */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 40vh;
+            max-height: 400px;
+            min-height: 300px;
+        }
+
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 380px;
+            }
+        }
+
+        /* Interactive Elements */
+        .app-card {
+            transition: all 0.2s ease-in-out;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+        .app-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        .app-card.active {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+        }
+
+        /* CSS Diagram Styles (Replacing SVG) */
+        .diagram-node {
+            background-color: white;
+            border: 2px solid #cbd5e1;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            text-align: center;
+            font-weight: 600;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            position: relative;
+            z-index: 10;
+        }
+        .diagram-line-vertical {
+            width: 2px;
+            height: 2rem;
+            background-color: #94a3b8;
+            margin: 0 auto;
+        }
+        .diagram-container {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Navbar -->
+    <nav class="bg-slate-900 text-white sticky top-0 z-50 shadow-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center gap-2">
+                    <span class="text-2xl">⚛️</span>
+                    <span class="font-bold text-xl tracking-tight">Quantum<span class="text-blue-400">Claw</span> Insights</span>
+                </div>
+                <div class="hidden md:flex space-x-6">
+                    <a href="#summary" class="hover:text-blue-400 text-sm font-medium transition-colors">执行摘要</a>
+                    <a href="#applications" class="hover:text-blue-400 text-sm font-medium transition-colors">潜在应用场景</a>
+                    <a href="#risks" class="text-red-400 hover:text-red-300 text-sm font-medium transition-colors">安全风险剖析</a>
+                    <a href="#architecture" class="hover:text-blue-400 text-sm font-medium transition-colors">防御架构</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero / Summary Section -->
+    <header id="summary" class="bg-white border-b border-slate-200 py-16 md:py-24">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h1 class="text-4xl md:text-5xl lg:text-6xl font-extrabold text-slate-900 tracking-tight mb-6">
+                OpenClaw 介入量子计算实验：<br class="hidden md:block"/>
+                <span class="text-blue-600">潜力释放</span>与<span class="text-red-600">灾难性风险</span>
+            </h1>
+            <p class="mt-4 text-lg md:text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">
+                2026年，具备“终端级控制权”与“自主编程能力”的智能体 <strong>OpenClaw</strong> 为精密科学实验带来了颠覆性变革。本报告系统性探讨了其在超导、中性原子等量子计算平台中的高价值应用，并着重敲响警钟：<strong>在缺乏零信任物理隔离的环境下，其非决定性行为将对千万级实验设备和国家级 IP 造成不可逆的威胁。</strong>
+            </p>
+        </div>
+    </header>
+
+    <main>
+        <!-- Section 1: Potential Applications -->
+        <section id="applications" class="py-16 bg-slate-50">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="mb-12">
+                    <h2 class="text-3xl font-bold text-slate-900 flex items-center gap-3">
+                        <span class="text-blue-500">▌</span> 一、 OpenClaw 在量子实验中的潜在应用
+                    </h2>
+                    <p class="mt-4 text-slate-600">此模块展示了 OpenClaw 如何接管控制电脑，自动化复杂的量子硬件操作流程。请点击左侧任务卡片，查看对应的效率提升数据。</p>
+                </div>
+
+                <div class="flex flex-col lg:flex-row gap-8">
+                    <!-- Interactive Tabs/Cards -->
+                    <div class="w-full lg:w-1/3 flex flex-col gap-4" id="app-tabs">
+                        <div class="app-card active bg-white p-5 rounded-xl shadow-sm" data-target="calibration" onclick="switchApp('calibration', this)">
+                            <h3 class="font-bold text-lg text-slate-800">🛠️ 自动化仪器校准 (Auto-Calibration)</h3>
+                            <p class="text-sm text-slate-500 mt-2">接管任意波形发生器 (AWG) 与微波源，利用 Python 脚本实现 24/7 闭环参数寻优。</p>
+                        </div>
+                        <div class="app-card bg-white p-5 rounded-xl shadow-sm border-slate-200" data-target="analysis" onclick="switchApp('analysis', this)">
+                            <h3 class="font-bold text-lg text-slate-800">📊 实时数据层析 (Data Tomography)</h3>
+                            <p class="text-sm text-slate-500 mt-2">监听读取信道，自主清洗海量原始信号，并实时绘制量子态保真度热力图。</p>
+                        </div>
+                        <div class="app-card bg-white p-5 rounded-xl shadow-sm border-slate-200" data-target="circuit" onclick="switchApp('circuit', this)">
+                            <h3 class="font-bold text-lg text-slate-800">💻 动态线路生成 (Circuit Generation)</h3>
+                            <p class="text-sm text-slate-500 mt-2">将研究员的自然语言意图直接转化为底层 OpenQASM 代码并适配硬件拓扑。</p>
+                        </div>
+                        <div class="app-card bg-white p-5 rounded-xl shadow-sm border-slate-200" data-target="hybrid" onclick="switchApp('hybrid', this)">
+                            <h3 class="font-bold text-lg text-slate-800">🔄 混合算法调度 (Hybrid Orchestration)</h3>
+                            <p class="text-sm text-slate-500 mt-2">在本地经典计算集群（优化参数）与量子后端（计算能量期望）之间自动调度进程。</p>
+                        </div>
+                    </div>
+
+                    <!-- Dynamic Content Panel -->
+                    <div class="w-full lg:w-2/3 bg-white p-6 md:p-8 rounded-xl shadow-sm border border-slate-200 flex flex-col">
+                        <div class="mb-6">
+                            <h3 id="app-title" class="text-2xl font-bold text-slate-900 mb-2">自动化仪器校准 (Auto-Calibration)</h3>
+                            <p id="app-desc" class="text-slate-600 leading-relaxed">
+                                量子比特对环境噪声极度敏感，需要频繁校准脉冲幅度和频率。以往依赖研究生手动运行 Jupyter Notebooks 耗时数小时。OpenClaw 能够识别控制软件界面的报错，自主修改并运行 QCoDeS 脚本，完成 Rabi 振荡、T1/T2 弛豫时间的自动化测定，将系统恢复到高保真度状态。
+                            </p>
+                        </div>
+                        
+                        <div class="mt-auto">
+                            <h4 class="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4">执行耗时对比分析 (分钟)</h4>
+                            <!-- CHART CONTAINER -->
+                            <div class="chart-container">
+                                <canvas id="efficiencyChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Core Risks (Primary Focus) -->
+        <section id="risks" class="py-16 bg-white border-t border-slate-200">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="mb-12">
+                    <h2 class="text-3xl font-bold text-slate-900 flex items-center gap-3">
+                        <span class="text-red-600">▌</span> 二、 核心潜在风险评估与调研
+                    </h2>
+                    <p class="mt-4 text-slate-600 max-w-3xl">
+                        OpenClaw 的“代理”特性在科研环境中是一把双刃剑。当量子计算机这一脆弱且昂贵的系统暴露给具有文件系统与终端读写权限的非决定性 AI 时，将面临以下四个维度的致命风险。
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 xl:grid-cols-2 gap-10 items-start">
+                    <!-- Bubble Chart Area -->
+                    <div class="bg-slate-50 p-6 rounded-xl border border-slate-200">
+                        <h3 class="text-center font-bold text-slate-700 mb-2">OpenClaw x 量子计算风险矩阵</h3>
+                        <p class="text-center text-xs text-slate-500 mb-4">X轴: 发生概率 | Y轴: 潜在破坏力 | 气泡大小: 蔓延与难以察觉度</p>
+                        
+                        <!-- CHART CONTAINER -->
+                        <div class="chart-container h-[450px]">
+                            <canvas id="riskChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Risk Explanations -->
+                    <div class="space-y-6">
+                        <!-- Risk 1 -->
+                        <div class="bg-red-50 p-5 rounded-lg border-l-4 border-red-600 shadow-sm">
+                            <div class="flex items-center justify-between mb-2">
+                                <h4 class="text-lg font-bold text-red-900">1. 物理设备不可逆损毁 (最高危)</h4>
+                                <span class="bg-red-200 text-red-800 text-xs px-2 py-1 rounded font-bold">高破坏力</span>
+                            </div>
+                            <p class="text-sm text-slate-700 leading-relaxed">
+                                <strong>机制：</strong> 智能体产生“幻觉”或代码逻辑错误，通过终端向仪器发送极端参数。<br/>
+                                <strong>场景：</strong> 错误覆写了稀释制冷机 (Dilution Refrigerator) 的温控脚本，导致制冷机失温甚至损坏；或指令高功率激光器输出超出光学平台阈值的功率，瞬间烧毁千万级的量子芯片与光学器件。
+                            </p>
+                        </div>
+
+                        <!-- Risk 2 -->
+                        <div class="bg-amber-50 p-5 rounded-lg border-l-4 border-amber-500 shadow-sm">
+                            <div class="flex items-center justify-between mb-2">
+                                <h4 class="text-lg font-bold text-amber-900">2. 核心知识产权 (IP) 外泄</h4>
+                                <span class="bg-amber-200 text-amber-900 text-xs px-2 py-1 rounded font-bold">极易发生</span>
+                            </div>
+                            <p class="text-sm text-slate-700 leading-relaxed">
+                                <strong>机制：</strong> OpenClaw 维持上下文的 `MEMORY.md` 等日志文件被恶意插件读取并外传。<br/>
+                                <strong>场景：</strong> 实验室研发的最新量子纠错码 (QEC) 拓扑结构、校准参数或未发表的论文草稿，被伪装成“数据分析辅助”的第三方 skill 窃取，上传至外部服务器。
+                            </p>
+                        </div>
+
+                        <!-- Risk 3 -->
+                        <div class="bg-blue-50 p-5 rounded-lg border-l-4 border-blue-500 shadow-sm">
+                            <h4 class="text-lg font-bold text-blue-900 mb-2">3. 隐性实验数据污染</h4>
+                            <p class="text-sm text-slate-700 leading-relaxed">
+                                <strong>机制：</strong> 自动化数据处理脚本中潜伏着不易察觉的算法偏差 (Bias)。<br/>
+                                <strong>场景：</strong> OpenClaw 自动编写的层析成像清洗脚本，无意中过滤掉了真实的量子噪声特征，导致最终报告中呈现出虚高的保真度 (Fidelity)。由于无人审查底层代码，整个研究团队基于错误的数据发表了无法复现的论文。
+                            </p>
+                        </div>
+
+                        <!-- Risk 4 -->
+                        <div class="bg-purple-50 p-5 rounded-lg border-l-4 border-purple-500 shadow-sm">
+                            <h4 class="text-lg font-bold text-purple-900 mb-2">4. 通信信道指令注入 (Prompt Injection)</h4>
+                            <p class="text-sm text-slate-700 leading-relaxed">
+                                <strong>机制：</strong> 攻击者通过共享的协作平台（如 Slack / GitHub PR）向 OpenClaw 发送恶意指令。<br/>
+                                <strong>场景：</strong> 团队允许 OpenClaw 监听 Slack 消息以执行任务。竞争对手或恶意黑客在公网发出一串伪装的文字，诱导 OpenClaw 在实验控制电脑后台静默安装后门，接管系统的最高权限。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Mitigation Architecture (CSS Diagram) -->
+        <section id="architecture" class="py-16 bg-slate-900 text-white border-t border-slate-800">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="mb-12 text-center">
+                    <h2 class="text-3xl font-bold flex justify-center items-center gap-3">
+                        <span class="text-teal-400">▌</span> 三、 零信任安全防御架构建议
+                    </h2>
+                    <p class="mt-4 text-slate-400 max-w-2xl mx-auto">
+                        针对 OpenClaw 引入的巨大安全隐患，实验室必须放弃传统的“信任本地网络”理念，采用物理隔离与多层沙盒结合的架构。
+                    </p>
+                </div>
+
+                <!-- CSS-Based Flow Diagram (NO SVG/MERMAID) -->
+                <div class="bg-slate-800 p-8 rounded-xl border border-slate-700 overflow-x-auto">
+                    <div class="diagram-container min-w-[700px]">
+                        
+                        <!-- Layer 1: User/Network -->
+                        <div class="flex gap-8 justify-center w-full">
+                            <div class="diagram-node bg-blue-100 text-slate-800 border-blue-300 w-48">
+                                👨‍🔬 实验人员 / 指令输入
+                            </div>
+                            <div class="diagram-node bg-slate-700 text-slate-300 border-slate-600 w-48 text-sm">
+                                ⚠️ 外部网络 (GitHub/API) <br/> <span class="text-red-400">强物理隔离 (Air-Gap)</span>
+                            </div>
+                        </div>
+
+                        <!-- Connectors -->
+                        <div class="flex justify-start w-full px-[calc(50%-6rem)]">
+                            <div class="diagram-line-vertical"></div>
+                        </div>
+
+                        <!-- Layer 2: Sandbox -->
+                        <div class="w-full max-w-3xl border-2 border-teal-500 border-dashed rounded-xl p-6 relative bg-slate-800/50">
+                            <div class="absolute -top-3 left-6 bg-slate-900 px-2 text-teal-400 font-bold text-sm">隔离沙盒环境 (Docker / VM)</div>
+                            <div class="flex flex-col items-center">
+                                <div class="diagram-node bg-teal-50 text-slate-800 border-teal-500 w-64 mb-4">
+                                    🤖 <strong>OpenClaw 核心进程</strong><br/>
+                                    <span class="text-xs font-normal">无宿主机 Root 权限 / 只读环境</span>
+                                </div>
+                                <div class="flex gap-4">
+                                    <div class="diagram-node bg-amber-50 text-slate-800 border-amber-300 text-xs px-2 py-1">
+                                        📄 本地 Memory 存储
+                                    </div>
+                                    <div class="diagram-node bg-indigo-50 text-slate-800 border-indigo-300 text-xs px-2 py-1">
+                                        🐍 虚拟 Python 解释器
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Connectors -->
+                        <div class="diagram-line-vertical"></div>
+                        
+                        <!-- Layer 3: Gatekeeper -->
+                        <div class="diagram-node bg-slate-900 border-red-500 text-red-400 shadow-[0_0_15px_rgba(239,68,68,0.3)] w-80">
+                            🛑 <strong>Human-in-the-Loop 审批网关</strong><br/>
+                            <span class="text-xs text-slate-300">拦截危险指令 (如: 高功率、温度覆写)</span>
+                        </div>
+
+                        <!-- Connectors -->
+                        <div class="diagram-line-vertical"></div>
+
+                        <!-- Layer 4: Hardware -->
+                        <div class="flex gap-6 justify-center w-full">
+                            <div class="diagram-node bg-slate-200 text-slate-800 w-40 text-sm">
+                                📡 微波仪器 (AWG)
+                            </div>
+                            <div class="diagram-node bg-slate-200 text-slate-800 w-40 text-sm">
+                                🧊 稀释制冷机
+                            </div>
+                            <div class="diagram-node bg-slate-200 text-slate-800 w-40 text-sm">
+                                🔬 量子处理单元 (QPU)
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-slate-950 py-8 text-center text-slate-500 text-sm">
+        <p>&copy; 2026 量子安全评估实验室 (QSAL). 本报告页面专为演示架构与数据交互生成。</p>
+    </footer>
+
+    <!-- JS Logic -->
+    <script>
+        // --- 1. State Management & Data for Applications ---
+        const applicationsData = {
+            calibration: {
+                title: "自动化仪器校准 (Auto-Calibration)",
+                desc: "量子比特对环境噪声极度敏感，需要频繁校准脉冲幅度和频率。以往依赖研究生手动运行 Jupyter Notebooks 耗时数小时。OpenClaw 能够识别控制软件界面的报错，自主修改并运行 QCoDeS 脚本，完成 Rabi 振荡、T1/T2 弛豫时间的自动化测定，将系统恢复到高保真度状态。",
+                chartLabels: ["搜寻最佳工作点", "Rabi 振荡校准", "系统温度稳定等待", "异常排查"],
+                manualData: [120, 45, 60, 90], // 分钟
+                aiData: [15, 5, 60, 10]
+            },
+            analysis: {
+                title: "实时数据层析 (Data Tomography)",
+                desc: "获取量子态的完整信息（状态层析）会产生海量数据。OpenClaw 在后台静默运行，一旦实验仪器写入新数据，立即触发处理流：自动编写清洗逻辑、拟合密度矩阵，并在几秒钟内将结果推送到研究员的本地终端或内部看板上，彻底消除人工导出/导入的时间死角。",
+                chartLabels: ["数据导出与清洗", "基线校正", "密度矩阵拟合计算", "图表生成"],
+                manualData: [30, 40, 90, 20],
+                aiData: [2, 5, 20, 2]
+            },
+            circuit: {
+                title: "动态线路生成 (Circuit Generation)",
+                desc: "研究人员只需下达指令：'生成一个5比特纠缠态测试线路，并映射到当前芯片的线性拓扑上'。OpenClaw 即可调阅底层硬件 API 文档，利用 Qiskit 或 Cirq 编写出最优的控制脉冲序列，甚至能自我审查代码中的语法错误。",
+                chartLabels: ["文献算法理解", "编写基础线路", "硬件拓扑适配重编译", "代码本地除错"],
+                manualData: [60, 45, 120, 60],
+                aiData: [5, 10, 15, 5]
+            },
+            hybrid: {
+                title: "混合算法调度 (Hybrid Orchestration)",
+                desc: "在变分量子本征求解器 (VQE) 中，经典计算机与量子处理器的频繁通信是瓶颈。OpenClaw 充当了完美的“中场指挥官”，全权接管本地操作系统的进程分配：在 GPU 上运行经典优化器，生成参数后瞬间传递给仪器控制软件，收集结果后再度循环，实现真正的无人值守 VQA 迭代。",
+                chartLabels: ["环境配置与依赖管理", "进程间通信搭建", "参数传递延迟(累计)", "实验日志记录"],
+                manualData: [90, 120, 40, 30],
+                aiData: [10, 5, 10, 2]
+            }
+        };
+
+        let efficiencyChartInstance = null;
+
+        // --- 2. Initialize and Update Bar Chart ---
+        function initEfficiencyChart(targetKey) {
+            const ctx = document.getElementById('efficiencyChart').getContext('2d');
+            const data = applicationsData[targetKey];
+
+            if (efficiencyChartInstance) {
+                efficiencyChartInstance.destroy();
+            }
+
+            efficiencyChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.chartLabels,
+                    datasets: [
+                        {
+                            label: '人工执行耗时预估 (分钟)',
+                            data: data.manualData,
+                            backgroundColor: 'rgba(148, 163, 184, 0.7)', // Slate-400
+                            borderColor: 'rgba(100, 116, 139, 1)',
+                            borderWidth: 1,
+                            borderRadius: 4
+                        },
+                        {
+                            label: 'OpenClaw 介入后耗时 (分钟)',
+                            data: data.aiData,
+                            backgroundColor: 'rgba(59, 130, 246, 0.8)', // Blue-500
+                            borderColor: 'rgba(37, 99, 235, 1)',
+                            borderWidth: 1,
+                            borderRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y', // Horizontal for better readability of text labels
+                    plugins: {
+                        legend: { position: 'bottom', labels: { font: { family: 'system-ui' } } },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                        }
+                    },
+                    scales: {
+                        x: { 
+                            beginAtZero: true, 
+                            title: { display: true, text: '时间消耗 (分钟)' },
+                            grid: { color: '#f1f5f9' }
+                        },
+                        y: { 
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        }
+
+        // --- 3. Handle Application Tab Switching ---
+        window.switchApp = function(targetKey, element) {
+            // Update active styling
+            document.querySelectorAll('.app-card').forEach(card => {
+                card.classList.remove('active', 'border-blue-500', 'bg-blue-50');
+                card.classList.add('border-slate-200');
+            });
+            element.classList.add('active', 'border-blue-500', 'bg-blue-50');
+            element.classList.remove('border-slate-200');
+
+            // Update Text Content
+            document.getElementById('app-title').innerText = applicationsData[targetKey].title;
+            document.getElementById('app-desc').innerText = applicationsData[targetKey].desc;
+
+            // Update Chart
+            initEfficiencyChart(targetKey);
+        };
+
+        // --- 4. Initialize Risk Matrix Bubble Chart ---
+        function initRiskChart() {
+            const ctx = document.getElementById('riskChart').getContext('2d');
+            
+            // X: 发生概率 (Likelihood 1-10)
+            // Y: 破坏力 (Impact 1-10)
+            // R: 隐蔽性/蔓延速度大小
+            const riskPoints = [
+                { x: 3, y: 10, r: 20, label: "1. 物理设备损毁", bg: "rgba(220, 38, 38, 0.7)" },   // Red-600
+                { x: 9, y: 8, r: 15, label: "2. 核心知识产权外泄", bg: "rgba(245, 158, 11, 0.7)" }, // Amber-500
+                { x: 8, y: 6, r: 25, label: "3. 隐性数据污染", bg: "rgba(59, 130, 246, 0.7)" },     // Blue-500
+                { x: 5, y: 7, r: 12, label: "4. 通信指令注入", bg: "rgba(168, 85, 247, 0.7)" }      // Purple-500
+            ];
+
+            new Chart(ctx, {
+                type: 'bubble',
+                data: {
+                    datasets: riskPoints.map(point => ({
+                        label: point.label,
+                        data: [{ x: point.x, y: point.y, r: point.r }],
+                        backgroundColor: point.bg,
+                        borderColor: point.bg.replace('0.7', '1'),
+                        borderWidth: 2
+                    }))
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label} (概率: ${context.raw.x}, 破坏力: ${context.raw.y})`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            min: 0, max: 10,
+                            title: { display: true, text: '发生概率 (Likelihood) ➡️', font: {weight: 'bold'} },
+                            grid: { color: '#e2e8f0' }
+                        },
+                        y: {
+                            min: 0, max: 11,
+                            title: { display: true, text: '潜在破坏程度 (Impact) ⬆️', font: {weight: 'bold'} },
+                            grid: { color: '#e2e8f0' }
+                        }
+                    }
+                }
+            });
+        }
+
+        // --- 5. Bootstrapping ---
+        document.addEventListener('DOMContentLoaded', () => {
+            initEfficiencyChart('calibration');
+            initRiskChart();
+        });
+    </script>
+</body>
+</html>
